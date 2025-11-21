@@ -3,21 +3,21 @@ import random
 
 # --- Mock Database ---
 MOCK_PRODUCTS = [
-    {"id": "p_101", "name": "Çikolatalı Gofret", "category": "Atıştırmalık", "sales_last_month": {"g_1": 800, "g_2": 300, "g_3": 100, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_102", "name": "Organik Yulaf Ezmesi", "category": "Kahvaltılık", "sales_last_month": {"g_1": 2, "g_2": 3, "g_3": 0, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_103", "name": "Premium Filtre Kahve", "category": "İçecek", "sales_last_month": {"g_1": 1, "g_2": 5, "g_3": 2, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_104", "name": "Zeytinyağlı Sabun", "category": "Kozmetik", "sales_last_month": {"g_1": 1, "g_2": 2, "g_3": 0, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_105", "name": "Enerji İçeceği", "category": "İçecek", "sales_last_month": {"g_1": 50, "g_2": 200, "g_3": 600, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_106", "name": "Siyah Çay 1kg", "category": "İçecek", "sales_last_month": {"g_1": 1500, "g_2": 800, "g_3": 200, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_107", "name": "Bulaşık Deterjanı 750ml", "category": "Temizlik", "sales_last_month": {"g_1": 50, "g_2": 350, "g_3": 50, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_108", "name": "Kağıt Havlu 6'lı", "category": "Temizlik", "sales_last_month": {"g_1": 2, "g_2": 8, "g_3": 2, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_109", "name": "Ayçiçek Yağı 5L", "category": "Gıda", "sales_last_month": {"g_1": 50, "g_2": 200, "g_3": 50, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_110", "name": "Makarna (Burgu)", "category": "Gıda", "sales_last_month": {"g_1": 600, "g_2": 800, "g_3": 100, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_111", "name": "Diş Macunu", "category": "Kozmetik", "sales_last_month": {"g_1": 5, "g_2": 15, "g_3": 5, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_112", "name": "Şampuan 500ml", "category": "Kozmetik", "sales_last_month": {"g_1": 10, "g_2": 25, "g_3": 5, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_113", "name": "Meyve Suyu (Şeftali)", "category": "İçecek", "sales_last_month": {"g_1": 200, "g_2": 300, "g_3": 100, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_114", "name": "Tuzlu Fıstık", "category": "Atıştırmalık", "sales_last_month": {"g_1": 3, "g_2": 4, "g_3": 2, "g_4": 0, "g_5": 0, "g_6": 0}},
-    {"id": "p_115", "name": "Bebek Bezi (4 Numara)", "category": "Bebek Bakım", "sales_last_month": {"g_1": 20, "g_2": 100, "g_3": 30, "g_4": 0, "g_5": 0, "g_6": 0}},
+    {"id": "p_101", "name": "Çikolatalı Gofret", "category": "Atıştırmalık", "sales_last_month": {"g_1": 800, "g_2": 300, "g_3": 100, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_102", "name": "Organik Yulaf Ezmesi", "category": "Kahvaltılık", "sales_last_month": {"g_1": 2, "g_2": 3, "g_3": 0, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_103", "name": "Premium Filtre Kahve", "category": "İçecek", "sales_last_month": {"g_1": 1, "g_2": 5, "g_3": 2, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_104", "name": "Zeytinyağlı Sabun", "category": "Kozmetik", "sales_last_month": {"g_1": 1, "g_2": 2, "g_3": 0, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_105", "name": "Enerji İçeceği", "category": "İçecek", "sales_last_month": {"g_1": 50, "g_2": 200, "g_3": 600, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_106", "name": "Siyah Çay 1kg", "category": "İçecek", "sales_last_month": {"g_1": 1500, "g_2": 800, "g_3": 200, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_107", "name": "Bulaşık Deterjanı 750ml", "category": "Temizlik", "sales_last_month": {"g_1": 50, "g_2": 350, "g_3": 50, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_108", "name": "Kağıt Havlu 6'lı", "category": "Temizlik", "sales_last_month": {"g_1": 2, "g_2": 8, "g_3": 2, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_109", "name": "Ayçiçek Yağı 5L", "category": "Gıda", "sales_last_month": {"g_1": 50, "g_2": 200, "g_3": 50, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_110", "name": "Makarna (Burgu)", "category": "Gıda", "sales_last_month": {"g_1": 600, "g_2": 800, "g_3": 100, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_111", "name": "Diş Macunu", "category": "Kozmetik", "sales_last_month": {"g_1": 5, "g_2": 15, "g_3": 5, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_112", "name": "Şampuan 500ml", "category": "Kozmetik", "sales_last_month": {"g_1": 10, "g_2": 25, "g_3": 5, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_113", "name": "Meyve Suyu (Şeftali)", "category": "İçecek", "sales_last_month": {"g_1": 200, "g_2": 300, "g_3": 100, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_114", "name": "Tuzlu Fıstık", "category": "Atıştırmalık", "sales_last_month": {"g_1": 3, "g_2": 4, "g_3": 2, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
+    {"id": "p_115", "name": "Bebek Bezi (4 Numara)", "category": "Bebek Bakım", "sales_last_month": {"g_1": 20, "g_2": 100, "g_3": 30, "g_4": 0, "g_5": 0, "g_6": 0}, "current_discount": None},
 ]
 
 MOCK_CUSTOMER_GROUPS = [
@@ -66,12 +66,15 @@ def get_customer_groups():
     print("DEBUG: get_customer_groups çağrıldı.")
     return json.dumps(MOCK_CUSTOMER_GROUPS)
 
-def create_discount(product_id: str, group_id: str, discount_rate: int, duration_days: int):
+def create_discount(product_id: str, group_id: str, discount_rate: int, duration_days: int, confirmed: bool = False):
     """
     Belirli bir ürün ve müşteri grubu için iskonto tanımlar.
     """
-    print(f"DEBUG: create_discount çağrıldı. Ürün: {product_id}, Grup: {group_id}, Oran: %{discount_rate}, Süre: {duration_days} gün")
+    print(f"DEBUG: create_discount çağrıldı. Ürün: {product_id}, Grup: {group_id}, Oran: %{discount_rate}, Süre: {duration_days} gün, Onay: {confirmed}")
     
+    if not confirmed:
+        return json.dumps({"error": "İşlem kullanıcı tarafından onaylanmadı. Lütfen kullanıcıdan açıkça onay isteyin."})
+
     # Ürün ve grup kontrolü (Mock)
     product = next((p for p in MOCK_PRODUCTS if p['id'] == product_id), None)
     group = next((g for g in MOCK_CUSTOMER_GROUPS if g['id'] == group_id), None)
@@ -91,6 +94,13 @@ def create_discount(product_id: str, group_id: str, discount_rate: int, duration
         "status": "Active"
     }
     MOCK_DISCOUNTS.append(new_discount)
+    
+    # Ürün kartını güncelle (Canlı Demo için)
+    product['current_discount'] = {
+        "rate": discount_rate,
+        "group_name": group['name'],
+        "duration": duration_days
+    }
     
     return json.dumps({
         "status": "success",
@@ -195,9 +205,13 @@ tools_schema = [
                     "duration_days": {
                         "type": "integer",
                         "description": "İskontonun geçerli olacağı gün sayısı."
+                    },
+                    "confirmed": {
+                        "type": "boolean",
+                        "description": "Kullanıcının işlemi onaylayıp onaylamadığı. Kullanıcı 'evet' veya 'onaylıyorum' demeden true gönderilmemelidir."
                     }
                 },
-                "required": ["product_id", "group_id", "discount_rate", "duration_days"]
+                "required": ["product_id", "group_id", "discount_rate", "duration_days", "confirmed"]
             }
         }
     },

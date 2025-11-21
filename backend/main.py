@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.models import StartChatRequest, ChatMessageRequest, ChatResponse
 from app.assistant import create_thread, add_message_to_thread, run_assistant
+from app.tools import MOCK_PRODUCTS
 
 app = FastAPI(title="NeoBot MVP Backend")
 
@@ -18,6 +19,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/api/products")
+async def get_products():
+    """
+    Returns the current state of products (including live discounts).
+    """
+    return MOCK_PRODUCTS
 
 @app.post("/api/chat/start")
 async def start_chat():
