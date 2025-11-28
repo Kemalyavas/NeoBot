@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
+import { Send, User, Loader2 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import neobiIcon from '../assets/neobi-icon.png';
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Merhaba! Ben NeoBot. Size nasıl yardımcı olabilirim?' }
+    { role: 'assistant', content: 'Merhaba! Ben NeoBI. Size nasıl yardımcı olabilirim?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -18,6 +20,166 @@ const ChatInterface = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Custom Tooltip Component - Minimal Design
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const value = payload[0].value;
+
+      return (
+        <div style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.98)',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          border: '1px solid #e0e0e0'
+        }}>
+          <p style={{
+            margin: '0 0 6px 0',
+            fontWeight: '600',
+            color: '#333',
+            fontSize: '13px'
+          }}>{label}</p>
+          <p style={{
+            margin: '0',
+            color: '#007AFF',
+            fontWeight: '700',
+            fontSize: '18px'
+          }}>
+            {value.toLocaleString('tr-TR')}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Helper to parse and render message content (Text + Chart)
+  const renderMessageContent = (content) => {
+    // 1. Check for JSON code block
+    const jsonBlockRegex = /```json\s*([\s\S]*?)\s*```/;
+    const match = content.match(jsonBlockRegex);
+
+    let chartData = null;
+    let textContent = content;
+
+    if (match) {
+      try {
+        const parsed = JSON.parse(match[1]);
+        if (parsed.type === 'chart') {
+          chartData = parsed;
+          // Calculate total for percentage
+          const total = chartData.data.reduce((sum, item) => sum + item.value, 0);
+          chartData.data = chartData.data.map(item => ({ ...item, total }));
+
+          // Remove the JSON block from text to avoid duplication
+          textContent = content.replace(match[0], '').trim();
+        }
+      } catch (e) {
+        console.error("Failed to parse JSON in message", e);
+      }
+    }
+
+    // Clean up markdown bolding for text
+    const cleanText = textContent.replace(/\*\*/g, '');
+
+    return (
+      <div>
+        {cleanText && <div style={{ whiteSpace: 'pre-wrap' }}>{cleanText}</div>}
+
+        {chartData && (
+          <div style={{
+            marginTop: '20px',
+            width: 'calc(100% + 8px)',
+            marginLeft: '-4px',
+            padding: '16px 12px',
+            backgroundColor: '#ffffff',
+            borderRadius: '12px',
+            border: '1px solid #e9ecef'
+          }}>
+            <div style={{
+              marginBottom: '16px',
+              paddingBottom: '12px',
+              borderBottom: '1px solid #e9ecef'
+            }}>
+              <p style={{
+                fontWeight: '600',
+                fontSize: '15px',
+                color: '#212529',
+                margin: '0'
+              }}>
+                {chartData.title}
+              </p>
+            </div>
+
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart
+                data={chartData.data}
+                margin={{ top: 10, right: 5, left: 5, bottom: 80 }}
+              >
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#007AFF" stopOpacity={0.85}/>
+                    <stop offset="100%" stopColor="#007AFF" stopOpacity={0.65}/>
+                  </linearGradient>
+                </defs>
+
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#e9ecef"
+                  vertical={false}
+                />
+
+                <XAxis
+                  dataKey="name"
+                  tick={{
+                    fontSize: 11,
+                    fontWeight: 500,
+                    fill: '#6c757d'
+                  }}
+                  interval={0}
+                  angle={-40}
+                  textAnchor="end"
+                  height={85}
+                  stroke="#dee2e6"
+                />
+
+                <YAxis
+                  tick={{
+                    fontSize: 12,
+                    fontWeight: 500,
+                    fill: '#6c757d'
+                  }}
+                  stroke="#dee2e6"
+                  label={{
+                    value: 'Satış Adedi',
+                    angle: -90,
+                    position: 'insideLeft',
+                    style: {
+                      fontSize: '12px',
+                      fill: '#6c757d',
+                      fontWeight: 500
+                    }
+                  }}
+                />
+
+                <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(0, 122, 255, 0.04)'}} />
+
+                <Bar
+                  dataKey="value"
+                  fill="url(#barGradient)"
+                  radius={[6, 6, 0, 0]}
+                  animationDuration={600}
+                  animationBegin={0}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+    );
+  };
+
 
   useEffect(() => {
     // Start a new chat session on load
@@ -77,27 +239,25 @@ const ChatInterface = () => {
     }}>
       {/* Header */}
       <div style={{
-        padding: '20px',
+        padding: '16px 20px',
         borderBottom: '1px solid #eee',
         display: 'flex',
         alignItems: 'center',
-        gap: '10px',
+        gap: '12px',
         backgroundColor: '#fff'
       }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          borderRadius: '50%',
-          backgroundColor: '#007AFF',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white'
-        }}>
-          <Bot size={24} />
-        </div>
-        <div>
-          <h2 style={{ margin: 0, fontSize: '18px', color: '#333' }}>NeoBot</h2>
+        <img 
+          src={neobiIcon} 
+          alt="NeoBI" 
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            objectFit: 'cover'
+          }}
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 style={{ margin: 0, fontSize: '18px', color: '#333', lineHeight: '1.2' }}>NeoBI</h2>
           <span style={{ fontSize: '12px', color: '#666' }}>AI Assistant • Online</span>
         </div>
       </div>
@@ -122,19 +282,17 @@ const ChatInterface = () => {
             }}
           >
             {msg.role === 'assistant' && (
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: '#007AFF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                flexShrink: 0
-              }}>
-                <Bot size={18} />
-              </div>
+              <img 
+                src={neobiIcon} 
+                alt="NeoBI" 
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  flexShrink: 0
+                }}
+              />
             )}
             
             <div style={{
@@ -146,9 +304,8 @@ const ChatInterface = () => {
               boxShadow: msg.role === 'assistant' ? '0 2px 5px rgba(0,0,0,0.05)' : 'none',
               borderTopLeftRadius: msg.role === 'assistant' ? '4px' : '12px',
               borderTopRightRadius: msg.role === 'user' ? '4px' : '12px',
-              whiteSpace: 'pre-wrap'
             }}>
-              {msg.content.replace(/\*\*/g, '')}
+              {renderMessageContent(msg.content)}
             </div>
 
             {msg.role === 'user' && (
@@ -170,18 +327,16 @@ const ChatInterface = () => {
         ))}
         {isLoading && (
           <div style={{ display: 'flex', gap: '10px' }}>
-             <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: '#007AFF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white'
-              }}>
-                <Bot size={18} />
-              </div>
+             <img 
+                src={neobiIcon} 
+                alt="NeoBI" 
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  objectFit: 'cover'
+                }}
+              />
               <div style={{
                 padding: '12px 16px',
                 backgroundColor: 'white',
