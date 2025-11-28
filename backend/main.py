@@ -1,15 +1,27 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from app.models import StartChatRequest, ChatMessageRequest, ChatResponse
 from app.assistant import create_thread, add_message_to_thread, run_assistant
 from app.tools import MOCK_PRODUCTS
+import os
 
-app = FastAPI(title="NeoBot MVP Backend")
+app = FastAPI(title="NeoBI Backend")
 
-# CORS Configuration (Allow React Frontend)
+# Frontend build klasörü (production'da React build dosyaları burada)
+FRONTEND_BUILD_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend/dist"))
+
+# CORS Configuration
+# Production'da aynı origin olacağı için CORS gereksiz olabilir,
+# ama development ve test için açık bırakıyoruz
 origins = [
-    "http://localhost:5173", # Vite default port
+    "http://localhost:5173",  # Vite dev server
     "http://localhost:3000",
+    "http://localhost:8000",
+    "http://localhost:6000",
+    "https://neobicb.neocortexbe.com",
+    "https://neobicb-test.neocortexbe.com",
 ]
 
 app.add_middleware(
@@ -49,6 +61,64 @@ async def send_message(request: ChatMessageRequest):
         return {"response": response_text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================
+# PRODUCTION: React Frontend Static Serving
+# ============================================
+
+# Frontend build varsa static dosyaları mount et
+if os.path.exists(FRONTEND_BUILD_PATH):
+    # Assets klasörünü mount et (JS, CSS, images)
+    assets_path = os.path.join(FRONTEND_BUILD_PATH, "assets")
+    if os.path.exists(assets_path):
+        app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
+    
+    # Diğer static dosyalar için (favicon, manifest vs.)
+    @app.get("/favicon.ico")
+    async def favicon():
+        favicon_path = os.path.join(FRONTEND_BUILD_PATH, "favicon.ico")
+        if os.path.exists(favicon_path):
+            return FileResponse(favicon_path)
+        raise HTTPException(status_code=404)
+    
+    @app.get("/neobi-icon.png")
+    async def neobi_icon():
+        icon_path = os.path.join(FRONTEND_BUILD_PATH, "neobi-icon.png")
+        if os.path.exists(icon_path):
+            return FileResponse(icon_path)
+        raise HTTPException(status_code=404)
+    
+    # Root path - index.html döndür
+    @app.get("/")
+    async def serve_root():
+        index_path = os.path.join(FRONTEND_BUILD_PATH, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        return {"message": "NeoBI API is running. Frontend not found - run 'npm run build' in frontend folder."}
+    
+    # SPA Catch-all Route: API dışındaki tüm istekleri React'a yönlendir
+    # Bu en sonda olmalı çünkü tüm path'leri yakalar
+    @app.get("/{full_path:path}")
+    async def serve_react_app(full_path: str):
+        """
+        React SPA için catch-all route.
+        API endpoint'leri zaten yukarıda tanımlı, onlar öncelikli.
+        Diğer tüm GET istekleri index.html'e yönlendirilir.
+        """
+        # API isteklerini 404 döndür (zaten handle edilmiş olmalı)
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="API endpoint not found")
+        
+        index_path = os.path.join(FRONTEND_BUILD_PATH, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        raise HTTPException(status_code=404, detail="Frontend not built")
+else:
+    @app.get("/")
+    async def root():
+        return {"message": "NeoBI API is running. Frontend not built yet - run 'npm run build' in frontend folder."}
+
 
 if __name__ == "__main__":
     import uvicorn

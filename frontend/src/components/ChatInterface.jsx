@@ -4,6 +4,10 @@ import { Send, User, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import neobiIcon from '../assets/neobi-icon.png';
 
+// API Base URL: Production'da aynı origin'den sunulduğu için boş string kullanıyoruz
+// Development'ta Vite proxy kullanılabilir veya .env.development ile override edilebilir
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 const ChatInterface = () => {
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Merhaba! Ben NeoBI. Size nasıl yardımcı olabilirim?' }
@@ -185,7 +189,7 @@ const ChatInterface = () => {
     // Start a new chat session on load
     const startChat = async () => {
       try {
-        const response = await axios.post('http://localhost:8000/api/chat/start');
+        const response = await axios.post(`${API_BASE_URL}/api/chat/start`);
         setThreadId(response.data.thread_id);
         console.log("Chat started, Thread ID:", response.data.thread_id);
       } catch (error) {
@@ -204,7 +208,7 @@ const ChatInterface = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:8000/api/chat/message', {
+      const response = await axios.post(`${API_BASE_URL}/api/chat/message`, {
         thread_id: threadId,
         message: userMessage
       });
