@@ -42,6 +42,20 @@ def get_customer_groups():
         print(f"ERROR: get_customer_groups failed: {e}")
         return json.dumps({"error": str(e)})
 
+def get_product_groups():
+    """
+    Ürün gruplarını (kategorileri) listeler.
+    """
+    print("DEBUG: get_product_groups çağrıldı (API).")
+    try:
+        groups = neoone_client.get_product_groups()
+        # Format for AI
+        formatted = [{"id": g.get("id"), "name": g.get("name", g.get("productGroupName", ""))} for g in groups]
+        return json.dumps(formatted, ensure_ascii=False)
+    except Exception as e:
+        print(f"ERROR: get_product_groups failed: {e}")
+        return json.dumps({"error": str(e)})
+
 def get_product_sales(start_date: str = None, end_date: str = None):
     """
     Ürün satış raporunu getirir.
@@ -644,6 +658,18 @@ tools_schema = [
                 "required": []
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_product_groups",
+            "description": "Ürün gruplarını (kategorileri) listeler. Kullanıcı ürün kategorilerini veya gruplarını sorduğunda bu fonksiyon kullanılır.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
     }
 ]
 
@@ -653,6 +679,7 @@ available_functions = {
     "get_low_selling_products": get_low_selling_products,
     "get_top_bottom_products": get_top_bottom_products,
     "get_customer_groups": get_customer_groups,
+    "get_product_groups": get_product_groups,
     "get_product_sales_distribution": get_product_sales_distribution,
     "create_discount": create_discount,
     "check_discount_performance": check_discount_performance,

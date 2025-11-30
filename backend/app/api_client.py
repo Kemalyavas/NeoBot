@@ -64,6 +64,21 @@ class NeoOneClient:
             return data.get("data", [])
         return []
     
+    # ==================== PRODUCT GROUPS (KATEGORİLER) ====================
+    
+    def get_product_groups(self) -> list:
+        """Ürün gruplarını (kategorileri) getirir."""
+        response = requests.get(
+            f"{self.base_url}/ProductGroups",
+            headers=self._headers()
+        )
+        response.raise_for_status()
+        
+        data = response.json()
+        if data.get("success"):
+            return data.get("data", [])
+        return []
+    
     # ==================== PRODUCT SALES ====================
     
     def get_product_sales(self, start_date: str = None, end_date: str = None) -> list:
