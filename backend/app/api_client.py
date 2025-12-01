@@ -64,6 +64,24 @@ class NeoOneClient:
             return data.get("data", [])
         return []
     
+    # ==================== CUSTOMERS ====================
+    
+    def get_customers(self) -> list:
+        """Tüm müşterileri getirir."""
+        response = requests.get(
+            f"{self.base_url}/Customers",
+            headers=self._headers()
+        )
+        response.raise_for_status()
+        
+        data = response.json()
+        if data.get("success"):
+            return data.get("data", [])
+        # Bazen direkt liste dönebilir
+        if isinstance(data, list):
+            return data
+        return []
+    
     # ==================== PRODUCT GROUPS (KATEGORİLER) ====================
     
     def get_product_groups(self) -> list:

@@ -42,6 +42,36 @@ def get_customer_groups():
         print(f"ERROR: get_customer_groups failed: {e}")
         return json.dumps({"error": str(e)})
 
+def get_customer_count(group_by: str = None):
+    """
+    Müşteri sayısını getirir. Grup bazlı veya toplam olarak.
+    group_by: 'group' ise müşteri grubu bazlı sayım yapar.
+    """
+    print(f"DEBUG: get_customer_count çağrıldı. group_by: {group_by}")
+    try:
+        customers = neoone_client.get_customers()
+        total_count = len(customers)
+        
+        if group_by == "group":
+            # Grup bazlı sayım
+            group_counts = {}
+            for c in customers:
+                group_info = c.get("customerGroup", {})
+                group_name = group_info.get("customerGroupName", "Tanımsız")
+                group_counts[group_name] = group_counts.get(group_name, 0) + 1
+            
+            result = {
+                "total_customers": total_count,
+                "by_group": [{"group_name": k, "count": v} for k, v in sorted(group_counts.items(), key=lambda x: x[1], reverse=True)]
+            }
+        else:
+            result = {"total_customers": total_count}
+        
+        return json.dumps(result, ensure_ascii=False)
+    except Exception as e:
+        print(f"ERROR: get_customer_count failed: {e}")
+        return json.dumps({"error": str(e)})
+
 def get_product_groups():
     """
     Ürün gruplarını (kategorileri) listeler.
@@ -670,6 +700,24 @@ tools_schema = [
                 "required": []
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_customer_count",
+            "description": "Müşteri sayısını getirir. Toplam müşteri sayısı veya müşteri grubu bazlı sayım yapabilir. 'Kaç müşterimiz var?', 'Müşteri sayısı nedir?', 'Grup bazlı müşteri dağılımı' gibi sorularda kullanılır.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "group_by": {
+                        "type": "string",
+                        "enum": ["group"],
+                        "description": "Grup bazlı sayım için 'group' değeri verilir. Verilmezse sadece toplam sayı döner."
+                    }
+                },
+                "required": []
+            }
+        }
     }
 ]
 
@@ -679,6 +727,7 @@ available_functions = {
     "get_low_selling_products": get_low_selling_products,
     "get_top_bottom_products": get_top_bottom_products,
     "get_customer_groups": get_customer_groups,
+    "get_customer_count": get_customer_count,
     "get_product_groups": get_product_groups,
     "get_product_sales_distribution": get_product_sales_distribution,
     "create_discount": create_discount,
