@@ -15,7 +15,43 @@ const ChatInterface = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [threadId, setThreadId] = useState(null);
+  const [userToken, setUserToken] = useState(null);  // NeoOne kullanıcı token'ı
   const messagesEndRef = useRef(null);
+
+  // Embedded modda mı kontrol et
+  const isEmbedded = new URLSearchParams(window.location.search).get('embedded') === 'true';
+
+  // NeoOne'dan gelen token mesajlarını dinle
+  useEffect(() => {
+    const handleMessage = (event) => {
+      // Güvenlik: Sadece güvenilir origin'lerden gelen mesajları kabul et
+      const trustedOrigins = [
+        'https://exp.app.neoone.com.tr',
+        'https://app.neoone.com.tr',
+        'http://localhost:3000',
+        'http://localhost:5173'
+      ];
+      
+      if (!trustedOrigins.some(origin => event.origin.includes(origin.replace('https://', '').replace('http://', '')))) {
+        return;
+      }
+
+      const { type, token, user } = event.data || {};
+      
+      if (type === 'NEOBI_SET_TOKEN' && token) {
+        console.log('NeoBI: Token received from parent');
+        setUserToken(token);
+      }
+      
+      if (type === 'NEOBI_SET_USER' && user) {
+        console.log('NeoBI: User info received:', user);
+        // İleride kullanıcı bilgisi göstermek için kullanılabilir
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -189,7 +225,8 @@ const ChatInterface = () => {
     // Start a new chat session on load
     const startChat = async () => {
       try {
-        const response = await axios.post(`${API_BASE_URL}/api/chat/start`);
+        const headers = userToken ? { 'X-NeoOne-Token': userToken } : {};
+        const response = await axios.post(`${API_BASE_URL}/api/chat/start`, {}, { headers });
         setThreadId(response.data.thread_id);
         console.log("Chat started, Thread ID:", response.data.thread_id);
       } catch (error) {
@@ -197,7 +234,7 @@ const ChatInterface = () => {
       }
     };
     startChat();
-  }, []);
+  }, [userToken]);
 
   const handleSend = async () => {
     if (!input.trim() || !threadId) return;
@@ -208,10 +245,11 @@ const ChatInterface = () => {
     setIsLoading(true);
 
     try {
+      const headers = userToken ? { 'X-NeoOne-Token': userToken } : {};
       const response = await axios.post(`${API_BASE_URL}/api/chat/message`, {
         thread_id: threadId,
         message: userMessage
-      });
+      }, { headers });
 
       setMessages(prev => [...prev, { role: 'assistant', content: response.data.response }]);
     } catch (error) {

@@ -1,10 +1,11 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.models import StartChatRequest, ChatMessageRequest, ChatResponse
 from app.assistant import create_thread, add_message_to_thread, run_assistant
 from app.tools import MOCK_PRODUCTS
+from typing import Optional
 import os
 
 app = FastAPI(title="NeoBI Backend")
@@ -22,6 +23,8 @@ origins = [
     "http://localhost:6000",
     "https://neobicb.neocortexbe.com",
     "https://neobicb-test.neocortexbe.com",
+    "https://exp.app.neoone.com.tr",  # NeoSales Web - Production
+    "https://*.app.neoone.com.tr",    # NeoSales Web - Wildcard
 ]
 
 app.add_middleware(
@@ -40,22 +43,32 @@ async def get_products():
     return MOCK_PRODUCTS
 
 @app.post("/api/chat/start")
-async def start_chat():
+async def start_chat(x_neoone_token: Optional[str] = Header(None)):
     """
     Starts a new chat session (thread).
+    x_neoone_token: NeoOne kullanıcı token'ı (embedded modda gönderilir)
     """
     try:
+        # Token varsa ileride kullanılabilir
+        if x_neoone_token:
+            print(f"DEBUG: NeoOne token received (length: {len(x_neoone_token)})")
         thread = create_thread()
         return {"thread_id": thread.id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/chat/message", response_model=ChatResponse)
-async def send_message(request: ChatMessageRequest):
+async def send_message(request: ChatMessageRequest, x_neoone_token: Optional[str] = Header(None)):
     """
     Sends a message to the assistant and gets a response.
+    x_neoone_token: NeoOne kullanıcı token'ı (embedded modda gönderilir)
     """
     try:
+        # Token varsa NeoOne API isteklerinde kullanılabilir
+        if x_neoone_token:
+            print(f"DEBUG: Processing message with NeoOne token")
+            # TODO: Token'ı api_client'a geçir
+        
         add_message_to_thread(request.thread_id, request.message)
         response_text = run_assistant(request.thread_id)
         return {"response": response_text}
@@ -73,6 +86,14 @@ if os.path.exists(FRONTEND_BUILD_PATH):
     assets_path = os.path.join(FRONTEND_BUILD_PATH, "assets")
     if os.path.exists(assets_path):
         app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
+    
+    # Embed script için
+    @app.get("/embed.js")
+    async def embed_script():
+        embed_path = os.path.join(FRONTEND_BUILD_PATH, "embed.js")
+        if os.path.exists(embed_path):
+            return FileResponse(embed_path, media_type="application/javascript")
+        raise HTTPException(status_code=404)
     
     # Diğer static dosyalar için (favicon, manifest vs.)
     @app.get("/favicon.ico")
