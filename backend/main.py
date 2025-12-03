@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 from app.models import StartChatRequest, ChatMessageRequest, ChatResponse
 from app.assistant import create_thread, add_message_to_thread, run_assistant
 from app.tools import MOCK_PRODUCTS
+from app.api_client import neoone_client
 from typing import Optional
 import os
 
@@ -35,6 +36,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def validate_token_if_provided(token: Optional[str], require_token: bool = False) -> bool:
+    """
+    Token doğrulama helper fonksiyonu.
+    - require_token=True: Token zorunlu, yoksa veya geçersizse hata
+    - require_token=False: Token varsa doğrula, yoksa geç (development için)
+    """
+    if not token:
+        if require_token:
+            raise HTTPException(status_code=401, detail="Token required")
+        return True  # Token yoksa ve zorunlu değilse geç
+    
+    # Token var, doğrula
+    if not neoone_client.validate_user_token(token):
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    return True
+
 @app.get("/api/products")
 async def get_products():
     """
@@ -49,11 +67,14 @@ async def start_chat(x_neoone_token: Optional[str] = Header(None)):
     x_neoone_token: NeoOne kullanıcı token'ı (embedded modda gönderilir)
     """
     try:
-        # Token varsa ileride kullanılabilir
-        if x_neoone_token:
-            print(f"DEBUG: NeoOne token received (length: {len(x_neoone_token)})")
+        # Production'da token zorunlu olacak, şimdilik opsiyonel
+        # TODO: Canlıya çıkarken require_token=True yap
+        validate_token_if_provided(x_neoone_token, require_token=False)
+        
         thread = create_thread()
         return {"thread_id": thread.id}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -64,14 +85,15 @@ async def send_message(request: ChatMessageRequest, x_neoone_token: Optional[str
     x_neoone_token: NeoOne kullanıcı token'ı (embedded modda gönderilir)
     """
     try:
-        # Token varsa NeoOne API isteklerinde kullanılabilir
-        if x_neoone_token:
-            print(f"DEBUG: Processing message with NeoOne token")
-            # TODO: Token'ı api_client'a geçir
+        # Production'da token zorunlu olacak, şimdilik opsiyonel
+        # TODO: Canlıya çıkarken require_token=True yap
+        validate_token_if_provided(x_neoone_token, require_token=False)
         
         add_message_to_thread(request.thread_id, request.message)
         response_text = run_assistant(request.thread_id)
         return {"response": response_text}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -10,6 +10,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Token doğrulama cache'i (token -> (is_valid, expiry_time))
+_token_validation_cache = {}
+TOKEN_CACHE_DURATION = timedelta(minutes=10)  # 10 dakika cache
+
 class NeoOneClient:
     """NeoOne API ile iletişim kuran istemci sınıfı."""
     
@@ -48,6 +52,46 @@ class NeoOneClient:
             "Authorization": f"Bearer {self._get_token()}",
             "Content-Type": "application/json"
         }
+    
+    # ==================== TOKEN VALIDATION ====================
+    
+    def validate_user_token(self, user_token: str) -> bool:
+        """
+        Kullanıcının NeoOne token'ının geçerli olup olmadığını kontrol eder.
+        Cache kullanarak gereksiz API çağrılarını önler.
+        """
+        global _token_validation_cache
+        
+        # Cache'de var mı ve hala geçerli mi kontrol et
+        if user_token in _token_validation_cache:
+            is_valid, expiry = _token_validation_cache[user_token]
+            if datetime.now() < expiry:
+                print(f"DEBUG: Token validation from cache: {is_valid}")
+                return is_valid
+        
+        # Cache'de yok veya süresi dolmuş, API'ye sor
+        try:
+            response = requests.get(
+                f"{self.base_url}/Users",
+                headers={
+                    "Authorization": f"Bearer {user_token}",
+                    "Content-Type": "application/json"
+                },
+                timeout=5  # 5 saniye timeout
+            )
+            
+            is_valid = response.status_code == 200
+            
+            # Cache'e kaydet
+            _token_validation_cache[user_token] = (is_valid, datetime.now() + TOKEN_CACHE_DURATION)
+            
+            print(f"DEBUG: Token validation API call: {is_valid} (status: {response.status_code})")
+            return is_valid
+            
+        except Exception as e:
+            print(f"ERROR: Token validation failed: {e}")
+            # Hata durumunda false dön ama cache'leme
+            return False
     
     # ==================== CUSTOMER GROUPS ====================
     
