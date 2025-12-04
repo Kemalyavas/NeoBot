@@ -270,11 +270,11 @@ const ChatInterface = () => {
   return (
     <div style={{
       width: '100%',
-      maxWidth: '600px',
-      height: '80vh',
+      maxWidth: isEmbedded ? 'none' : '600px',
+      height: isEmbedded ? '100vh' : '80vh',
       backgroundColor: 'white',
-      borderRadius: '12px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+      borderRadius: isEmbedded ? '0' : '12px',
+      boxShadow: isEmbedded ? 'none' : '0 4px 20px rgba(0,0,0,0.1)',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden'
